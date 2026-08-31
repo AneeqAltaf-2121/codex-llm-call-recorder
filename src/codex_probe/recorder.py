@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import asyncio
 import threading
+from pathlib import Path
 from typing import Any
 
 import uvicorn
@@ -61,6 +62,13 @@ class ProxyRecorder:
         if self._actual_port is None:
             return None
         return f"http://{self.config.listen_host}:{self._actual_port}/v1"
+
+    @property
+    def calls_path(self) -> Path | None:
+        """Path to this session's ``calls.jsonl`` file, once started."""
+        if self._store is None:
+            return None
+        return self._store.calls_path
 
     def start(self) -> str:
         """Start a new recording session and return the local endpoint URL.
