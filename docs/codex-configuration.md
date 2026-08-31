@@ -1,7 +1,7 @@
 # Configuring Codex CLI to use CodexProbe
 
 CodexProbe never modifies Codex. Codex is simply told, through its own
-`~/.codex/config.toml`, to use CodexProbe as a `model_provider` --
+`~/.codex/config.toml`, to use CodexProbe as a `model_provider`,
 exactly the same mechanism you would use to point Codex at any other
 OpenAI-compatible server.
 
@@ -35,8 +35,8 @@ model = "gpt-5-codex"
 | Field            | Meaning                                                                                          |
 | ---------------- | ------------------------------------------------------------------------------------------------- |
 | `base_url`       | Must match the endpoint CodexProbe printed on startup. This is the entire integration point.      |
-| `wire_api`       | The OpenAI-compatible protocol Codex will use to talk to `base_url`. **Must match** the `wire_api` in CodexProbe's own backend config -- CodexProbe does not translate between protocols (see `docs/architecture.md`). |
-| `env_key`        | Name of an environment variable Codex reads an API key from, to send in its own `Authorization` header. Can be a placeholder for local/unauthenticated backends -- CodexProbe injects the *real* backend credential independently, from its own config's `backend.api_key_env` (see `docs/backend-swap.md`). |
+| `wire_api`       | The OpenAI-compatible protocol Codex will use to talk to `base_url`. **Must match** the `wire_api` in CodexProbe's own backend config: CodexProbe does not translate between protocols (see `docs/architecture.md`). |
+| `env_key`        | Name of an environment variable Codex reads an API key from, to send in its own `Authorization` header. Can be a placeholder for local/unauthenticated backends: CodexProbe injects the *real* backend credential independently, from its own config's `backend.api_key_env` (see `docs/backend-swap.md`). |
 | `model_provider` | Tells Codex to actually use the provider defined above, rather than its default.                  |
 | `model`          | Whatever model name the real backend expects. Must be a model the *backend* CodexProbe is currently configured for actually serves. |
 
@@ -46,7 +46,7 @@ model = "gpt-5-codex"
 codex exec "Create a Python function that reverses a string and add a unit test."
 ```
 
-Codex behaves exactly as it would talking to the backend directly --
+Codex behaves exactly as it would talking to the backend directly;
 CodexProbe adds no visible latency or behavior change (see
 `docs/architecture.md`). Every request it made and every response it got
 back, including full tool schemas and streamed output, is now on disk
@@ -60,5 +60,5 @@ Ctrl+C in the terminal running `codex-probe`. It finishes writing
 ## Switching backends
 
 Only the `wire_api` (if it differs) and CodexProbe's own `--config` file
-need to change -- Codex's `base_url` stays `http://127.0.0.1:8135/v1`
+need to change; Codex's `base_url` stays `http://127.0.0.1:8135/v1`
 either way. See `docs/backend-swap.md`.

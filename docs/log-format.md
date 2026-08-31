@@ -28,13 +28,13 @@ Session-level facts that don't belong on every individual call:
 }
 ```
 
-`ended_at` is `null` until the session is stopped -- a `metadata.json`
+`ended_at` is `null` until the session is stopped: a `metadata.json`
 with `ended_at: null` on disk means CodexProbe is still running (or was
 killed without a clean shutdown).
 
 ## `calls.jsonl`
 
-One JSON object per line, one per call, in the order calls occurred --
+One JSON object per line, one per call, in the order calls occurred,
 so a researcher (or a script) can replay a session call by call: prompt
 1, response 1, tool action, prompt 2, response 2, and so on. Each line
 matches this schema (`codex_probe/models.py:CapturedCall`):
@@ -89,11 +89,11 @@ matches this schema (`codex_probe/models.py:CapturedCall`):
 | `backend.*`           | Which backend this specific call went to (mirrors the session's `metadata.json`).          |
 | `request.method`      | HTTP method Codex used (almost always `POST`, but `GET /v1/models` also passes through).   |
 | `request.path`        | Full path Codex requested, e.g. `/v1/responses` or `/v1/chat/completions`.                 |
-| `request.headers`     | Every header Codex sent, with sensitive values (`authorization`, `api-key`, etc.) redacted -- see `codex_probe/headers.py`. |
+| `request.headers`     | Every header Codex sent, with sensitive values (`authorization`, `api-key`, etc.) redacted. See `codex_probe/headers.py`. |
 | `request.body`        | The **complete** request body: full system/developer instructions, full conversation and tool-call history, full tool schema. Parsed JSON where the body is JSON (the normal case), otherwise decoded text. Never truncated, never a summary. |
 | `response.status_code`| HTTP status the backend returned.                                                          |
 | `response.headers`    | Response headers, redacted the same way as request headers.                                |
-| `response.body`       | The **complete** response. For a non-streaming call, the parsed JSON body. For a streaming call, the fully reassembled text of every SSE chunk, in order -- exactly what `stream_and_capture` accumulated while forwarding it live (see `docs/architecture.md`). |
+| `response.body`       | The **complete** response. For a non-streaming call, the parsed JSON body. For a streaming call, the fully reassembled text of every SSE chunk, in order: exactly what `stream_and_capture` accumulated while forwarding it live (see `docs/architecture.md`). |
 | `streaming`           | Whether this call was served as a live SSE stream rather than a single buffered body.      |
 | `latency_ms`          | Wall-clock time from when CodexProbe sent the request upstream to when the response (or, for streaming, the *first* byte triggering the response) was ready. |
 
@@ -103,7 +103,7 @@ Header values that could be credentials (`authorization`, `api-key`,
 `x-api-key`, `openai-api-key`, `proxy-authorization`) are redacted before
 being written to disk (a `Bearer ...` value becomes `Bearer [REDACTED]`)
 so session logs can be shared or committed to a research write-up without
-leaking API keys. This redaction only affects the on-disk record --
+leaking API keys. This redaction only affects the on-disk record;
 CodexProbe still sees and forwards the real header value to the backend.
 
 Bodies are never redacted: the assignment's core requirement is a

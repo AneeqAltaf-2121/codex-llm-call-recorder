@@ -74,7 +74,7 @@ def test_captured_call_preserves_full_request_body_not_a_preview():
 
     stored = call.model_dump()["request"]["body"]
 
-    # The full body must be present verbatim -- no truncation, no summary.
+    # The full body must be present verbatim: no truncation, no summary.
     assert stored["instructions"] == long_system_prompt
     assert len(stored["history"]) == 200
     assert stored["history"][199]["content"] == "tool output 199"
@@ -130,7 +130,7 @@ def test_call_schema_rejects_unknown_fields():
         )
 
 
-# --- SessionLogStore ---------------------------------------------------
+# SessionLogStore tests
 
 
 def test_new_session_id_matches_expected_format():

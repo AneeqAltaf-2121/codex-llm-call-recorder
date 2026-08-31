@@ -3,7 +3,7 @@
 Hosts a catch-all ASGI app that accepts any method/path Codex sends
 (``POST /v1/responses``, ``POST /v1/chat/completions``, ``GET /v1/models``,
 ...), forwards it to the configured backend via :mod:`codex_probe.transport`,
-and -- if given an ``on_call`` handler -- reports a complete
+and, if given an ``on_call`` handler, reports a complete
 :class:`~codex_probe.models.CapturedCall` for every request once it
 finishes. Codex's observed behavior (status code, headers, body) is
 preserved exactly; the proxy adds nothing and removes nothing except the
@@ -13,7 +13,7 @@ hop-by-hop headers that must never be forwarded (see
 Non-streaming responses are fully buffered and returned in one piece.
 Streaming (SSE) responses are detected via ``Content-Type`` and handed to
 :mod:`codex_probe.streaming`, which forwards chunks to Codex the instant
-they arrive while simultaneously capturing them for the log -- Codex sees
+they arrive while simultaneously capturing them for the log: Codex sees
 identical streaming behavior whether CodexProbe is in the path or not.
 """
 
@@ -61,7 +61,7 @@ def create_app(
     """Build the CodexProbe FastAPI app for one recorder session.
 
     A fresh sequence counter is created per app/session, so
-    ``CapturedCall.sequence`` always starts at 1 for a new session --
+    ``CapturedCall.sequence`` always starts at 1 for a new session,
     matching the per-session log files written by
     :mod:`codex_probe.logging_store`.
     """

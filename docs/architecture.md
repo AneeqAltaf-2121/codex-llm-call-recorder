@@ -3,8 +3,8 @@
 ## The problem
 
 Codex CLI talks to an LLM backend over plain OpenAI-compatible HTTP. To
-study or reproduce that traffic -- the full prompts, tool schemas, and
-responses, not summaries -- something has to sit on that wire and record
+study or reproduce that traffic (the full prompts, tool schemas, and
+responses, not summaries), something has to sit on that wire and record
 it, without changing what Codex itself does or sees.
 
 Two ways to get there:
@@ -14,7 +14,7 @@ Two ways to get there:
    Codex's existing `model_provider.base_url` configuration at it.
 
 CodexProbe is (2). Codex already supports configuring arbitrary
-OpenAI-compatible providers (see `docs/codex-configuration.md`) -- that
+OpenAI-compatible providers (see `docs/codex-configuration.md`); that
 configuration surface is the extension point this project uses, so Codex
 itself is never touched, rebuilt, or forked. This also means CodexProbe
 works with *any* HTTP client that speaks the same protocol, not just
@@ -46,14 +46,14 @@ Codex.
 Codex is configured once, with a `base_url` pointing at CodexProbe
 instead of a real backend. CodexProbe forwards every request to whichever
 backend its own configuration names, and writes a complete record of
-each call to disk. Which backend that is -- and nothing else -- changes
+each call to disk. Which backend that is, and nothing else, changes
 when you swap from OpenAI to a local Qwen model (see
 `docs/backend-swap.md`).
 
 ## Module boundaries
 
 Each module has one job and depends only on the modules below it in this
-list -- `proxy.py` orchestrates, everything else is a narrow, independently
+list. `proxy.py` orchestrates; everything else is a narrow, independently
 testable unit:
 
 | Module              | Responsibility                                                            |
@@ -75,7 +75,7 @@ Codex issues requests and expects a response (or a live stream) back on
 the same connection with no added latency it can attribute to the proxy.
 `httpx.AsyncClient` gives CodexProbe non-blocking I/O and connection
 pooling to the backend, and FastAPI/Starlette (built on ASGI) gives it a
-non-blocking server for Codex's own connection -- so one slow backend
+non-blocking server for Codex's own connection, so one slow backend
 call doesn't block a second, concurrent one, and the added latency from
 CodexProbe itself is negligible (process the request, forward it,
 process the response).
@@ -89,7 +89,7 @@ and appends it to an in-memory buffer at the same time; only once the
 stream ends is the buffer reassembled into a complete body and logged.
 Getting this wrong (buffer everything, *then* forward) would silently
 turn every streaming response into a non-streaming one from Codex's
-point of view -- exactly the kind of behavior change this project
+point of view: exactly the kind of behavior change this project
 promises not to introduce.
 
 ## What CodexProbe deliberately does not do
@@ -99,7 +99,7 @@ promises not to introduce.
   will faithfully forward a request Codex intended for one protocol to a
   backend expecting the other, and record whatever the backend does with
   it (an error, most likely). That mismatch is a *configuration* error
-  for the person running the experiment to avoid -- see
+  for the person running the experiment to avoid; see
   `docs/codex-configuration.md`.
 - **No response modification.** Status code, headers (aside from the
   hop-by-hop headers no proxy should forward, see `headers.py`), and body

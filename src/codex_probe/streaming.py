@@ -2,7 +2,7 @@
 
 Codex commonly receives Server-Sent Events from the Responses API. The
 property this module exists to guarantee is that CodexProbe never
-buffers a streamed response before relaying it -- doing that would
+buffers a streamed response before relaying it. Doing that would
 defeat the entire purpose of streaming, since Codex would see nothing
 until the backend had finished responding. Instead, every chunk is
 yielded to the client the instant it arrives *and* appended to an
@@ -14,7 +14,7 @@ in-memory buffer at the same time:
 
 Once the stream ends (or is interrupted), the buffered chunks are
 reassembled into the complete response body and handed to a callback for
-logging -- so the log always contains the full response even though
+logging, so the log always contains the full response even though
 Codex consumed it incrementally.
 """
 
@@ -41,8 +41,8 @@ async def stream_and_capture(
 ) -> AsyncIterator[bytes]:
     """Yield each chunk of ``upstream_response`` to the caller as it arrives.
 
-    Every chunk is forwarded immediately -- never held back to be
-    batched -- and simultaneously appended to an internal buffer. When
+    Every chunk is forwarded immediately (never held back to be
+    batched) and simultaneously appended to an internal buffer. When
     the stream is exhausted, or if iteration is interrupted (the client
     disconnects, an exception propagates), the upstream response is
     closed and ``on_complete`` is awaited exactly once with everything

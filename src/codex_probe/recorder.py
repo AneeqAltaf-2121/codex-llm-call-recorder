@@ -76,7 +76,7 @@ class ProxyRecorder:
         The returned URL (e.g. ``http://127.0.0.1:8135/v1``) is what
         Codex's ``model_provider.base_url`` should be configured to,
         exactly as it would be configured against a real OpenAI-compatible
-        backend -- CodexProbe is meant to be a drop-in substitute.
+        backend: CodexProbe is meant to be a drop-in substitute.
         """
         if self._server is not None:
             raise RuntimeError("ProxyRecorder.start() was already called on this instance")
@@ -146,7 +146,7 @@ class ProxyRecorder:
 
         The transport's HTTP client is closed here too, on the same
         event loop it made requests on, right after the server finishes
-        shutting down -- avoiding any cross-thread/cross-loop asyncio
+        shutting down. This avoids any cross-thread/cross-loop asyncio
         object usage.
         """
         loop = asyncio.new_event_loop()
@@ -173,7 +173,7 @@ class ProxyRecorder:
     def _resolve_actual_port(self) -> int:
         if self.config.listen_port != 0:
             return self.config.listen_port
-        # listen_port == 0 means "let the OS pick a free port" -- read
+        # listen_port == 0 means "let the OS pick a free port"; read
         # back whatever it actually bound to.
         assert self._server is not None
         sockets = self._server.servers[0].sockets

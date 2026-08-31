@@ -8,7 +8,7 @@ Each recorder run gets its own session directory::
         └── calls.jsonl
 
 ``calls.jsonl`` holds one JSON object per line, one per captured call, in
-call order -- so a researcher (or a script) can replay a session call by
+call order, so a researcher (or a script) can replay a session call by
 call: prompt 1, response 1, tool action, prompt 2, response 2, ...
 ``metadata.json`` records session-level facts (which backend and wire API
 were in effect, when the session started and ended) that don't belong on

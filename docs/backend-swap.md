@@ -44,7 +44,7 @@ compatible server needs no authentication). **`src/codex_probe/` did not
 change at all.** `codex_probe.config.load_config` validates whichever of
 these you pass to `ProxyRecorder`, and every other module
 (`transport.py`, `proxy.py`, `streaming.py`, `logging_store.py`) is
-already backend-agnostic -- it only ever reads `config.backend.*`, never
+already backend-agnostic: it only ever reads `config.backend.*`, never
 a hardcoded provider name.
 
 ## Why `wire_api` still matters here
@@ -56,7 +56,7 @@ between the two: whatever protocol Codex was told to speak is what
 arrives at CodexProbe's catch-all route, and CodexProbe forwards it
 byte-for-byte. So when you swap CodexProbe from Config A to Config B,
 **Codex's own config must also change its `wire_api`** to match the new
-backend (`responses` for OpenAI; `chat_completions` for Ollama/vLLM) --
+backend (`responses` for OpenAI; `chat_completions` for Ollama/vLLM),
 otherwise the backend will receive a request shaped for the wrong
 protocol and most likely return an error. That mismatch, if you hit it,
 is itself a real, recordable data point (see
@@ -73,7 +73,7 @@ ollama serve   # usually already running as a background service
 ```
 
 Ollama exposes an OpenAI-compatible server at `http://127.0.0.1:11434/v1`
-by default -- exactly what `examples/qwen_ollama_backend.json` points at.
+by default, exactly what `examples/qwen_ollama_backend.json` points at.
 Approximate requirements: ~8 GB of free disk for the 7B quantized model,
 and enough RAM to hold it (16 GB system RAM is a comfortable minimum for
 the 7B variant on CPU; a GPU with ~8 GB VRAM makes it noticeably faster).
@@ -87,8 +87,8 @@ python -m vllm.entrypoints.openai.api_server \
     --port 8000
 ```
 
-vLLM exposes an OpenAI-compatible server at `http://127.0.0.1:8000/v1`
--- see `examples/qwen_vllm_backend.json`. This needs a CUDA-capable GPU
+vLLM exposes an OpenAI-compatible server at `http://127.0.0.1:8000/v1`.
+See `examples/qwen_vllm_backend.json`. This needs a CUDA-capable GPU
 with enough VRAM for the chosen model (roughly 16 GB+ for an unquantized
 7B model); it is not a realistic CPU-only option.
 
@@ -115,7 +115,7 @@ codex-probe --config examples/qwen_ollama_backend.json
 ```
 
 Then inspect `logs/<session-2-id>/metadata.json` and confirm
-`"backend": "qwen-ollama"` -- proof the swap took effect purely through
+`"backend": "qwen-ollama"`, proof the swap took effect purely through
 configuration. See `docs/experiment-results.md` for how to compare the
 two sessions.
 
@@ -124,7 +124,7 @@ two sessions.
 Not every locally hosted model implements OpenAI-style tool/function
 calling as completely or reliably as OpenAI's own models. If Codex's
 tool calls come back malformed, get ignored, or cause the model to loop,
-that is itself a legitimate, useful experimental finding -- record what
+that is itself a legitimate, useful experimental finding; record what
 happened in `docs/experiment-results.md` rather than treating it as a
 CodexProbe bug (check `logs/<session>/calls.jsonl` first to see exactly
 what CodexProbe sent and what the backend returned).

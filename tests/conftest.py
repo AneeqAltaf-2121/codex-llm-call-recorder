@@ -29,7 +29,7 @@ def make_mock_backend_app() -> FastAPI:
 
     Every request it receives is appended to
     ``app.state.received_requests`` (method, path, headers, raw body) so
-    tests can assert on what actually reached the "backend" -- not just
+    tests can assert on what actually reached the "backend", not just
     what CodexProbe intended to send.
     """
     app = FastAPI()
@@ -96,7 +96,7 @@ def live_mock_backend():
 
     Unlike `mock_transport` (in-process ASGI, no sockets),
     `ProxyRecorder` binds a real socket via Uvicorn, so testing its full
-    lifecycle needs a real backend on the other end too -- this is what
+    lifecycle needs a real backend on the other end too: this is what
     Codex would see if it were pointed at CodexProbe for real.
     """
     app = make_mock_backend_app()

@@ -6,7 +6,7 @@ This document has two parts, and they should not be confused with each
 other:
 
 1. **What was actually verified in the environment CodexProbe was built
-   in** -- the automated test suite (`pytest`, 67 tests) and manual
+   in**: the automated test suite (`pytest`, 67 tests) and manual
    end-to-end smoke tests against real local backends over real TCP
    sockets. This is real, reproducible evidence that passthrough fidelity,
    streaming, header handling, session logging, and the `ProxyRecorder`
@@ -14,7 +14,7 @@ other:
 2. **A live Codex-vs-OpenAI and Codex-vs-Qwen comparison**, as the
    assignment's research framing intends. This requires a real OpenAI API
    key (which costs money per call) and either a local Ollama/vLLM
-   install with a multi-gigabyte model download, or a GPU machine --
+   install with a multi-gigabyte model download, or a GPU machine,
    neither of which is available in the sandboxed environment this
    project was built in. Rather than fabricate numbers, this section is
    a filled-in methodology and a template for the actual results, which
@@ -34,7 +34,7 @@ real run would defeat the entire point of building a recorder to get
   whatever Codex sent.
 - **Streaming** (`tests/test_streaming.py`): SSE events are forwarded
   live, in order, with the exact reassembled body available in the log
-  record -- byte-for-byte identical to what the client received.
+  record, byte-for-byte identical to what the client received.
 - **Session logging** (`tests/test_logging.py`): `metadata.json` and
   `calls.jsonl` are created correctly, calls are appended one JSON object
   per line in order, and everything survives being read back after the
@@ -75,7 +75,7 @@ codex exec "Create a Python function that reverses a string and add a unit test.
 1. `codex-probe --config examples/openai_backend.json`, set Codex's
    config to `wire_api = "responses"`, run the task, Ctrl+C.
 2. Note the session id CodexProbe printed; call it `SESSION_OPENAI`.
-3. Set up a local Qwen backend (`docs/backend-swap.md`) --
+3. Set up a local Qwen backend (`docs/backend-swap.md`);
    `qwen2.5-coder:7b` via Ollama is the recommended starting point.
 4. `codex-probe --config examples/qwen_ollama_backend.json`, set Codex's
    config to `wire_api = "chat_completions"`, run the *same* task,
@@ -88,20 +88,20 @@ codex exec "Create a Python function that reverses a string and add a unit test.
 Each of these is a straightforward `jq`/Python pass over
 `logs/<session>/calls.jsonl`:
 
-- **Number of LLM calls** -- `len(calls)`, or count of distinct
+- **Number of LLM calls**: `len(calls)`, or count of distinct
   `sequence` values.
-- **Latency** -- `latency_ms` per call; report min/median/max, since
+- **Latency**: `latency_ms` per call; report min/median/max, since
   local CPU-bound inference is typically far slower and far more
   variable than a hosted API.
-- **Tool-call behavior** -- for each call, whether `request.body` includes
+- **Tool-call behavior**: for each call, whether `request.body` includes
   a `tools` array, and whether `response.body` contains a corresponding
   tool/function call the model actually emitted (vs. plain text where a
   tool call was expected).
-- **Streaming** -- fraction of calls with `"streaming": true`, and
+- **Streaming**: fraction of calls with `"streaming": true`, and
   whether the backend produced any streamed output at all (some local
   servers default to non-streaming responses even when Codex requests
   streaming).
-- **Success/failure** -- fraction of calls with `response.status_code
+- **Success/failure**: fraction of calls with `response.status_code
   == 200` vs. errors, and whether the *task* completed (Codex reported
   success, produced working code) independent of individual call status.
 
@@ -109,7 +109,7 @@ Each of these is a straightforward `jq`/Python pass over
 
 Fill this in after running the procedure above.
 
-### Experiment 1 -- OpenAI (`examples/openai_backend.json`)
+### Experiment 1: OpenAI (`examples/openai_backend.json`)
 
 | Metric                  | Value |
 | ------------------------ | ----- |
@@ -122,7 +122,7 @@ Fill this in after running the procedure above.
 
 Notes / anomalies:
 
-### Experiment 2 -- Local Qwen (`examples/qwen_ollama_backend.json`)
+### Experiment 2: Local Qwen (`examples/qwen_ollama_backend.json`)
 
 | Metric                  | Value |
 | ------------------------ | ----- |
@@ -151,7 +151,7 @@ Notes / anomalies:
 
 ## Limitations of this comparison
 
-- A single task run once per backend is not statistically meaningful --
+- A single task run once per backend is not statistically meaningful:
   it demonstrates the harness works, not a robust performance claim.
   Repeating the task multiple times per backend (and reporting variance)
   would be a natural next step.

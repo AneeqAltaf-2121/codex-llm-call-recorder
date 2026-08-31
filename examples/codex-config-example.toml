@@ -1,6 +1,6 @@
 # Example Codex CLI configuration (~/.codex/config.toml) pointing Codex at
 # CodexProbe instead of directly at a backend. Codex is not modified in
-# any way -- this is the same `model_providers` extension point Codex
+# any way; this is the same `model_providers` extension point Codex
 # already supports for pointing at any OpenAI-compatible server.
 #
 # See docs/codex-configuration.md for a full walkthrough.

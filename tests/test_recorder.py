@@ -4,7 +4,7 @@ Unlike the passthrough/streaming tests (which wire the proxy app
 directly to an in-process mock backend via `httpx.ASGITransport`), these
 exercise `ProxyRecorder`'s actual job: binding a real local TCP port,
 running a real background Uvicorn server, and talking to a real (locally
-hosted) backend over a real socket -- because that is exactly what Codex
+hosted) backend over a real socket, because that is exactly what Codex
 itself will do.
 """
 

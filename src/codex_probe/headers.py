@@ -77,8 +77,8 @@ def apply_backend_auth(headers: Mapping[str, str], backend: BackendConfig) -> di
     """Inject backend authentication from configuration, if configured.
 
     When ``backend.api_key_env`` names an environment variable that is
-    set, its value overrides any ``Authorization`` header Codex sent --
-    this is what lets CodexProbe authenticate to the real backend
+    set, its value overrides any ``Authorization`` header Codex sent.
+    This is what lets CodexProbe authenticate to the real backend
     independently of however Codex itself was configured. Otherwise
     ``headers`` is returned unchanged (local backends such as Ollama
     typically require no authentication at all).
@@ -94,7 +94,7 @@ def apply_backend_auth(headers: Mapping[str, str], backend: BackendConfig) -> di
 def redact_headers_for_log(headers: Mapping[str, str]) -> dict[str, str]:
     """Return a copy of ``headers`` with sensitive values redacted.
 
-    Used only on the path into the log store -- the proxy still sees and
+    Used only on the path into the log store: the proxy still sees and
     forwards the real values; only the on-disk record is redacted, so a
     captured session's logs can be inspected or shared without leaking
     credentials.
