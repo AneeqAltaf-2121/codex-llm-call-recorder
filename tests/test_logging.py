@@ -8,6 +8,7 @@ metadata.json).
 from __future__ import annotations
 
 import json
+from datetime import UTC
 
 from codex_probe.logging_store import SessionLogStore, new_session_id
 from codex_probe.models import (
@@ -26,7 +27,9 @@ def _sample_call(**overrides) -> CapturedCall:
         sequence=1,
         session_id="session-1",
         timestamp=utc_timestamp(),
-        backend=BackendInfo(name="openai", base_url="https://api.openai.com/v1", wire_api="responses"),
+        backend=BackendInfo(
+            name="openai", base_url="https://api.openai.com/v1", wire_api="responses"
+        ),
         request=RequestRecord(
             method="POST",
             path="/v1/responses",
@@ -117,7 +120,9 @@ def test_call_schema_rejects_unknown_fields():
             sequence=1,
             session_id="s",
             timestamp=utc_timestamp(),
-            backend=BackendInfo(name="openai", base_url="https://api.openai.com/v1", wire_api="responses"),
+            backend=BackendInfo(
+                name="openai", base_url="https://api.openai.com/v1", wire_api="responses"
+            ),
             request=RequestRecord(method="POST", path="/v1/responses"),
             response=ResponseRecord(status_code=200),
             latency_ms=1.0,
@@ -137,9 +142,9 @@ def test_new_session_id_matches_expected_format():
 
 
 def test_new_session_id_is_unique_even_for_the_same_timestamp():
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    now = datetime(2026, 8, 30, 20, 45, 3, tzinfo=timezone.utc)
+    now = datetime(2026, 8, 30, 20, 45, 3, tzinfo=UTC)
     first = new_session_id(now)
     second = new_session_id(now)
     assert first != second
@@ -165,7 +170,9 @@ def test_session_store_creates_directory_and_metadata(tmp_path):
 
 
 def test_record_call_appends_one_json_object_per_line(tmp_path):
-    store = SessionLogStore(tmp_path, "session-2", backend_name="qwen-ollama", wire_api="chat_completions")
+    store = SessionLogStore(
+        tmp_path, "session-2", backend_name="qwen-ollama", wire_api="chat_completions"
+    )
     calls = [_sample_call(call_id=f"call-{i}", sequence=i) for i in (1, 2, 3)]
 
     for call in calls:
@@ -217,6 +224,7 @@ def test_calls_persist_on_disk_after_store_is_closed(tmp_path):
 
     # A fresh read (simulating a separate process/researcher inspecting
     # the logs later) must see exactly what was recorded.
-    on_disk = (tmp_path / "session-6" / "calls.jsonl").read_text(encoding="utf-8").strip().splitlines()
+    on_disk_path = tmp_path / "session-6" / "calls.jsonl"
+    on_disk = on_disk_path.read_text(encoding="utf-8").strip().splitlines()
     assert len(on_disk) == 1
     assert json.loads(on_disk[0])["call_id"] == "call-1"

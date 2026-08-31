@@ -75,7 +75,11 @@ class Transport:
         """
         relative_path = _strip_shared_prefix(path, self._client.base_url.path)
         return self._client.build_request(
-            method, relative_path, headers=headers, params=params, content=content
+            method,
+            relative_path,
+            headers=headers,
+            params=params,  # type: ignore[arg-type]  # list[tuple[str, str]] is accepted at runtime
+            content=content,
         )
 
     async def send(self, request: httpx.Request) -> httpx.Response:

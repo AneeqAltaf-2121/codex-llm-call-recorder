@@ -25,7 +25,9 @@ def proxy_client(backend_config, mock_transport, mock_backend_app, tmp_path):
     async def on_call(call):
         captured_calls.append(call)
 
-    app = create_app(config=config, transport=transport, session_id="stream-session", on_call=on_call)
+    app = create_app(
+        config=config, transport=transport, session_id="stream-session", on_call=on_call
+    )
     client = TestClient(app)
     client.captured_calls = captured_calls
     return client
