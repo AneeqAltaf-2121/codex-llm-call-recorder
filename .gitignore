@@ -1,18 +1,20 @@
-@"
 # Virtual environments
 .venv/
 venv/
+env/
 
 # Python
 __pycache__/
 *.py[cod]
 *.egg-info/
+*.egg
 dist/
 build/
 
 # Testing / coverage
 .pytest_cache/
 .coverage
+.coverage.*
 htmlcov/
 .tox/
 .nox/
@@ -27,18 +29,17 @@ htmlcov/
 .env.*
 !.env.example
 
+# Recorder output (session logs must never be committed)
+logs/*
+!logs/.gitkeep
+
 # Editor files
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# Logs / recorder output
-logs/
-*.log
-
 # OS files
 .DS_Store
 Thumbs.db
 desktop.ini
-"@ | Set-Content .gitignore
