@@ -10,9 +10,11 @@ preserved exactly; the proxy adds nothing and removes nothing except the
 hop-by-hop headers that must never be forwarded (see
 :mod:`codex_probe.headers`).
 
-This module currently handles the non-streaming (fully buffered) path
-only. Streaming (SSE) passthrough is added in :mod:`codex_probe.streaming`
-and wired in here in the next phase.
+Non-streaming responses are fully buffered and returned in one piece.
+Streaming (SSE) responses are detected via ``Content-Type`` and handed to
+:mod:`codex_probe.streaming`, which forwards chunks to Codex the instant
+they arrive while simultaneously capturing them for the log -- Codex sees
+identical streaming behavior whether CodexProbe is in the path or not.
 """
 
 from __future__ import annotations
@@ -23,6 +25,7 @@ from collections.abc import Awaitable, Callable
 from itertools import count
 
 from fastapi import FastAPI, Request, Response
+from fastapi.responses import StreamingResponse
 
 from codex_probe.config import RecorderConfig
 from codex_probe.headers import (
@@ -39,6 +42,7 @@ from codex_probe.models import (
     decode_body,
     utc_timestamp,
 )
+from codex_probe.streaming import looks_like_event_stream, stream_and_capture
 from codex_probe.transport import Transport
 
 #: Called once per finished call, with the complete captured record.
@@ -84,18 +88,46 @@ def create_app(
 
         started_at = time.perf_counter()
         upstream_response = await transport.send(upstream_request)
+        sequence = next(sequence_counter)
+        streaming = looks_like_event_stream(upstream_response.headers.get("content-type", ""))
+        response_headers = filter_response_headers(dict(upstream_response.headers))
+
+        if streaming:
+
+            async def on_complete(
+                body: bytes, status_code: int, raw_headers: dict[str, str]
+            ) -> None:
+                await _record_call(
+                    on_call=on_call,
+                    config=config,
+                    session_id=session_id,
+                    sequence=sequence,
+                    method=method,
+                    path=path,
+                    incoming_headers=incoming_headers,
+                    request_body=request_body,
+                    status_code=status_code,
+                    response_headers_raw=raw_headers,
+                    response_body=body,
+                    streaming=True,
+                    latency_ms=(time.perf_counter() - started_at) * 1000,
+                )
+
+            return StreamingResponse(
+                stream_and_capture(upstream_response, on_complete=on_complete),
+                status_code=upstream_response.status_code,
+                headers=response_headers,
+            )
 
         response_body = await upstream_response.aread()
         await upstream_response.aclose()
         latency_ms = (time.perf_counter() - started_at) * 1000
 
-        response_headers = filter_response_headers(dict(upstream_response.headers))
-
         await _record_call(
             on_call=on_call,
             config=config,
             session_id=session_id,
-            sequence=next(sequence_counter),
+            sequence=sequence,
             method=method,
             path=path,
             incoming_headers=incoming_headers,
