@@ -1,0 +1,13 @@
+{
+  "listen_host": "127.0.0.1",
+  "listen_port": 8135,
+
+  "backend": {
+    "name": "qwen-vllm",
+    "base_url": "http://127.0.0.1:8000/v1",
+    "wire_api": "chat_completions"
+  },
+
+  "log_dir": "./logs",
+  "seed": 123
+}
