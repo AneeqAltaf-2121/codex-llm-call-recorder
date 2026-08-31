@@ -47,6 +47,12 @@ HOP_BY_HOP_HEADERS = frozenset(
 # httpx re-encodes anything).
 REQUEST_SCOPED_HEADERS = frozenset({"host", "content-length"})
 
+# Response headers that must be recomputed rather than relayed verbatim:
+# httpx transparently decompresses the upstream body for us, so a stale
+# Content-Encoding would tell Codex to decompress bytes that are already
+# plain, and Content-Length must reflect whatever body we actually send.
+RESPONSE_SCOPED_HEADERS = frozenset({"content-encoding", "content-length"})
+
 # Header names whose *values* must never be written to disk in plaintext.
 SENSITIVE_HEADER_NAMES = frozenset(
     {"authorization", "api-key", "x-api-key", "openai-api-key", "proxy-authorization"}
@@ -58,6 +64,12 @@ _REDACTED = "[REDACTED]"
 def filter_forward_headers(headers: Mapping[str, str]) -> dict[str, str]:
     """Return the subset of ``headers`` safe to forward to the backend."""
     dropped = HOP_BY_HOP_HEADERS | REQUEST_SCOPED_HEADERS
+    return {name: value for name, value in headers.items() if name.lower() not in dropped}
+
+
+def filter_response_headers(headers: Mapping[str, str]) -> dict[str, str]:
+    """Return the subset of backend response headers safe to relay to Codex."""
+    dropped = HOP_BY_HOP_HEADERS | RESPONSE_SCOPED_HEADERS
     return {name: value for name, value in headers.items() if name.lower() not in dropped}
 
 
