@@ -15,8 +15,8 @@ import json
 import httpx
 import pytest
 
+from codex_probe import ProxyRecorder
 from codex_probe.errors import ConfigError
-from codex_probe.recorder import ProxyRecorder
 
 
 def _config(base_url: str, log_dir) -> dict:
