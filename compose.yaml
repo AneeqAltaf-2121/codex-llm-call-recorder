@@ -1,0 +1,52 @@
+# Reference topology:
+#
+#   CodexProbe (:8135)  --->  Ollama (:11434), serving a local Qwen model
+#
+# Usage:
+#   docker compose up --build
+#   docker compose exec ollama ollama pull qwen2.5-coder:7b
+#
+# Then point Codex at http://127.0.0.1:8135/v1 exactly as in
+# docs/codex-configuration.md -- from Codex's point of view this is
+# indistinguishable from any other OpenAI-compatible endpoint.
+#
+# To record against real OpenAI instead, set OPENAI_API_KEY (e.g. in a
+# local .env file, see .env.example) and override the command to use
+# examples/openai_backend.json -- no image rebuild required, since
+# backend selection is entirely config-driven. Note that this container
+# talks to Ollama by its service name ("ollama"), not "127.0.0.1" --
+# that's why compose uses examples/qwen_ollama_backend.docker.json
+# rather than the plain examples/qwen_ollama_backend.json used outside
+# Docker (see docs/backend-swap.md).
+services:
+  codex-probe:
+    build: .
+    ports:
+      - "8135:8135"
+    volumes:
+      - ./examples:/app/examples:ro
+      - ./logs:/app/logs
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    command: ["--config", "/app/examples/qwen_ollama_backend.docker.json"]
+    depends_on:
+      - ollama
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    # GPU acceleration (recommended for a 7B+ coder model) needs the
+    # NVIDIA Container Toolkit on the host; uncomment on a GPU machine:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+volumes:
+  ollama-data:
