@@ -78,7 +78,9 @@ def test_authorization_header_is_forwarded(proxy_client):
     assert received[-1]["headers"]["authorization"] == "Bearer test-token"
 
 
-def test_backend_api_key_env_overrides_forwarded_authorization(monkeypatch, backend_config, mock_transport, mock_backend_app, tmp_path):
+def test_backend_api_key_env_overrides_forwarded_authorization(
+    monkeypatch, backend_config, mock_transport, mock_backend_app, tmp_path
+):
     monkeypatch.setenv("MOCK_API_KEY", "sk-from-config")
     backend = backend_config.model_copy(update={"api_key_env": "MOCK_API_KEY"})
     config = RecorderConfig(backend=backend, log_dir=tmp_path / "logs")

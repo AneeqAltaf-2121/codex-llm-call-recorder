@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import json
 import secrets
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from codex_probe.models import CapturedCall
@@ -33,12 +33,12 @@ def new_session_id(now: datetime | None = None) -> str:
     same second (e.g. two recorder instances in one test run) never
     collide.
     """
-    now = now or datetime.now(timezone.utc)
+    now = now or datetime.now(UTC)
     return f"{now.strftime('%Y%m%d_%H%M%S')}_{secrets.token_hex(3)}"
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+    return datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
 class SessionLogStore:

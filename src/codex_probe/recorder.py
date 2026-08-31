@@ -90,8 +90,10 @@ class ProxyRecorder:
         )
         self._transport = Transport(self.config.backend, timeout=self.config.request_timeout)
 
+        store = self._store
+
         async def on_call(call: CapturedCall) -> None:
-            self._store.record_call(call)
+            store.record_call(call)
 
         app = create_app(
             config=self.config,
@@ -130,6 +132,8 @@ class ProxyRecorder:
             raise RuntimeError("ProxyRecorder.stop() called before start()")
         if self._stopped:
             raise RuntimeError("ProxyRecorder.stop() was already called on this instance")
+        assert self._thread is not None
+        assert self._store is not None
 
         self._server.should_exit = True
         self._thread.join(timeout=_SHUTDOWN_TIMEOUT)
@@ -148,13 +152,18 @@ class ProxyRecorder:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
+        server = self._server
+        transport = self._transport
+        assert server is not None
+        assert transport is not None
+
         async def lifespan() -> None:
-            server_task = asyncio.ensure_future(self._server.serve())
-            while not self._server.started and not server_task.done():
+            server_task = asyncio.ensure_future(server.serve())
+            while not server.started and not server_task.done():
                 await asyncio.sleep(_STARTUP_POLL_INTERVAL)
             ready.set()
             await server_task
-            await self._transport.aclose()
+            await transport.aclose()
 
         try:
             loop.run_until_complete(lifespan())
@@ -166,5 +175,6 @@ class ProxyRecorder:
             return self.config.listen_port
         # listen_port == 0 means "let the OS pick a free port" -- read
         # back whatever it actually bound to.
+        assert self._server is not None
         sockets = self._server.servers[0].sockets
         return sockets[0].getsockname()[1]

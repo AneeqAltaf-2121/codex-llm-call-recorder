@@ -15,7 +15,7 @@ complete, decoded payload.
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -77,7 +77,7 @@ class CapturedCall(BaseModel):
 
 def utc_timestamp() -> str:
     """Return the current time as an ISO-8601 UTC timestamp, e.g. ``...Z``."""
-    return datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+    return datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
 def decode_body(raw: bytes) -> Any:

@@ -46,7 +46,11 @@ def test_filter_forward_headers_is_case_insensitive():
 
 
 def test_filter_forward_headers_preserves_meaningful_headers():
-    headers = {"authorization": "Bearer sk-abc", "content-type": "application/json", "accept": "text/event-stream"}
+    headers = {
+        "authorization": "Bearer sk-abc",
+        "content-type": "application/json",
+        "accept": "text/event-stream",
+    }
     result = filter_forward_headers(headers)
     assert result == headers
 
