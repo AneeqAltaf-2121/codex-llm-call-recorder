@@ -1,0 +1,18 @@
+# Example Codex CLI configuration (~/.codex/config.toml) pointing Codex at
+# CodexProbe instead of directly at a backend. Codex is not modified in
+# any way -- this is the same `model_providers` extension point Codex
+# already supports for pointing at any OpenAI-compatible server.
+#
+# See docs/codex-configuration.md for a full walkthrough.
+
+[model_providers.codex_probe]
+name = "CodexProbe"
+base_url = "http://127.0.0.1:8135/v1"
+wire_api = "responses"
+env_key = "OPENAI_API_KEY"
+
+# Tell Codex to actually use the provider defined above, and which model
+# name to request. When CodexProbe is configured to forward to OpenAI
+# (examples/openai_backend.json), this should match a real OpenAI model.
+model_provider = "codex_probe"
+model = "gpt-5-codex"
