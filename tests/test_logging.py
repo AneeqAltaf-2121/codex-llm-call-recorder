@@ -1,13 +1,15 @@
-"""Tests for the captured-call schema (codex_probe.models).
+"""Tests for the captured-call schema and the session log store.
 
-Logging-store persistence tests (session directories, calls.jsonl,
-metadata.json) are added alongside these in Phase 8.
+Covers `codex_probe.models` (the schema every call is normalized into)
+and `codex_probe.logging_store` (session directories, calls.jsonl,
+metadata.json).
 """
 
 from __future__ import annotations
 
 import json
 
+from codex_probe.logging_store import SessionLogStore, new_session_id
 from codex_probe.models import (
     BackendInfo,
     CapturedCall,
@@ -121,3 +123,100 @@ def test_call_schema_rejects_unknown_fields():
             latency_ms=1.0,
             unexpected_field="nope",
         )
+
+
+# --- SessionLogStore ---------------------------------------------------
+
+
+def test_new_session_id_matches_expected_format():
+    session_id = new_session_id()
+    date_part, time_part, suffix = session_id.split("_")
+    assert len(date_part) == 8
+    assert len(time_part) == 6
+    assert len(suffix) == 6  # secrets.token_hex(3)
+
+
+def test_new_session_id_is_unique_even_for_the_same_timestamp():
+    from datetime import datetime, timezone
+
+    now = datetime(2026, 8, 30, 20, 45, 3, tzinfo=timezone.utc)
+    first = new_session_id(now)
+    second = new_session_id(now)
+    assert first != second
+    assert first.startswith("20260830_204503_")
+    assert second.startswith("20260830_204503_")
+
+
+def test_session_store_creates_directory_and_metadata(tmp_path):
+    store = SessionLogStore(tmp_path, "session-1", backend_name="openai", wire_api="responses")
+
+    assert store.session_dir == tmp_path / "session-1"
+    assert store.session_dir.is_dir()
+    assert store.metadata_path.exists()
+
+    metadata = json.loads(store.metadata_path.read_text(encoding="utf-8"))
+    assert metadata["session_id"] == "session-1"
+    assert metadata["backend"] == "openai"
+    assert metadata["wire_api"] == "responses"
+    assert metadata["started_at"]
+    assert metadata["ended_at"] is None
+
+    store.close()
+
+
+def test_record_call_appends_one_json_object_per_line(tmp_path):
+    store = SessionLogStore(tmp_path, "session-2", backend_name="qwen-ollama", wire_api="chat_completions")
+    calls = [_sample_call(call_id=f"call-{i}", sequence=i) for i in (1, 2, 3)]
+
+    for call in calls:
+        store.record_call(call)
+    store.close()
+
+    lines = store.calls_path.read_text(encoding="utf-8").strip().splitlines()
+    assert len(lines) == 3
+    parsed = [json.loads(line) for line in lines]
+    assert [entry["sequence"] for entry in parsed] == [1, 2, 3]
+    assert [entry["call_id"] for entry in parsed] == ["call-1", "call-2", "call-3"]
+
+
+def test_read_calls_returns_calls_in_recorded_order(tmp_path):
+    store = SessionLogStore(tmp_path, "session-3", backend_name="openai", wire_api="responses")
+    for i in (1, 2, 3):
+        store.record_call(_sample_call(call_id=f"call-{i}", sequence=i))
+
+    calls = store.read_calls()
+
+    assert [c["sequence"] for c in calls] == [1, 2, 3]
+
+
+def test_close_stamps_ended_at_and_returns_all_calls(tmp_path):
+    store = SessionLogStore(tmp_path, "session-4", backend_name="openai", wire_api="responses")
+    store.record_call(_sample_call(call_id="call-1", sequence=1))
+
+    returned_calls = store.close()
+
+    assert len(returned_calls) == 1
+    metadata = json.loads(store.metadata_path.read_text(encoding="utf-8"))
+    assert metadata["ended_at"] is not None
+
+
+def test_record_call_after_close_raises(tmp_path):
+    import pytest
+
+    store = SessionLogStore(tmp_path, "session-5", backend_name="openai", wire_api="responses")
+    store.close()
+
+    with pytest.raises(RuntimeError):
+        store.record_call(_sample_call(call_id="call-1", sequence=1))
+
+
+def test_calls_persist_on_disk_after_store_is_closed(tmp_path):
+    store = SessionLogStore(tmp_path, "session-6", backend_name="openai", wire_api="responses")
+    store.record_call(_sample_call(call_id="call-1", sequence=1))
+    store.close()
+
+    # A fresh read (simulating a separate process/researcher inspecting
+    # the logs later) must see exactly what was recorded.
+    on_disk = (tmp_path / "session-6" / "calls.jsonl").read_text(encoding="utf-8").strip().splitlines()
+    assert len(on_disk) == 1
+    assert json.loads(on_disk[0])["call_id"] == "call-1"
